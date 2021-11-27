@@ -13,6 +13,5 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/releases', App\Http\Controllers\Releases\IndexAction::class);
+Route::get('/downloads/PortalDots-{version}.zip', App\Http\Controllers\Downloads\DownloadZipAction::class)->where('version', '\d+\.\d+\.\d+')->name('downloads.zip');
