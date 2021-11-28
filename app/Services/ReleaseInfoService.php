@@ -35,7 +35,7 @@ class ReleaseInfoService
     /**
      * 指定されたメジャーバージョン内の全リリース情報を取得する
      *
-     * @return Version[]
+     * @return Release[]
      */
     public function getAllReleases(Int $major_version): array
     {
