@@ -14,4 +14,6 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::get('/releases', App\Http\Controllers\Releases\IndexAction::class);
+Route::get('/releases.json', App\Http\Controllers\Releases\JsonAction::class);
+Route::get('/releases/latest.json', App\Http\Controllers\Releases\LatestJsonAction::class);
 Route::get('/downloads/PortalDots-{version}.zip', App\Http\Controllers\Downloads\DownloadZipAction::class)->where('version', '\d+\.\d+\.\d+')->name('downloads.zip');

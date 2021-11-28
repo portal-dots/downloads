@@ -78,6 +78,11 @@ class ReleaseInfoService
                     }
                 }
 
+                // バージョン順にソートする
+                usort($result, function (Release $a, Release $b) {
+                    return version_compare($b->getVersion()->getFullVersion(), $a->getVersion()->getFullVersion());
+                });
+
                 return $result;
             }
         );

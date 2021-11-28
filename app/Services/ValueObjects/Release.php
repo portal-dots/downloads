@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Services\ValueObjects;
 
 use Carbon\CarbonImmutable;
+use JsonSerializable;
 
-final class Release
+final class Release implements JsonSerializable
 {
     /**
      * バージョン
@@ -94,5 +95,17 @@ final class Release
     public function getBody(): string
     {
         return $this->body;
+    }
+
+    public function jsonSerialize()
+    {
+        return [
+            'version' => $this->version->getFullVersion(),
+            'published_at' => $this->publishedAt->toIso8601String(),
+            'html_url' => $this->htmlUrl,
+            'browser_download_url' => $this->browserDownloadUrl,
+            'size' => $this->size,
+            'body' => $this->body,
+        ];
     }
 }
