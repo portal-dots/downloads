@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+Route::get('/', App\Http\Controllers\RootAction::class);
 Route::get('/releases', App\Http\Controllers\Releases\IndexAction::class);
 Route::get('/releases.json', App\Http\Controllers\Releases\JsonAction::class);
 Route::get('/releases/latest.json', App\Http\Controllers\Releases\LatestJsonAction::class);
