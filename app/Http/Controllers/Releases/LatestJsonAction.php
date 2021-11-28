@@ -20,7 +20,7 @@ class LatestJsonAction extends Controller
 
     public function __invoke(Request $request)
     {
-        $major_version = filter_var($request->input('current_major_version'), FILTER_VALIDATE_INT);
+        $major_version = filter_var($request->input('major_version'), FILTER_VALIDATE_INT);
 
         if (empty($major_version)) {
             abort(404);
