@@ -7,6 +7,13 @@ namespace App\Services\ValueObjects;
 final class Version
 {
     /**
+     * セマンティックバージョニングにマッチする正規表現
+     *
+     * @see https://semver.org/lang/ja/
+     */
+    public const SEMVER_REGEX = '/^(?P<major>0|[1-9]\d*)\.(?P<minor>0|[1-9]\d*)\.(?P<patch>0|[1-9]\d*)(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/';
+
+    /**
      * メジャーバージョン
      *
      * @var int
@@ -27,11 +34,19 @@ final class Version
      */
     private $patch;
 
-    public function __construct(int $major, int $minor, int $patch)
+    /**
+     * プレリリースバージョン
+     *
+     * @var string
+     */
+    private $prerelease;
+
+    public function __construct(int $major, int $minor, int $patch, string $prerelease = "")
     {
         $this->major = $major;
         $this->minor = $minor;
         $this->patch = $patch;
+        $this->prerelease = $prerelease;
     }
 
     /**
@@ -39,25 +54,31 @@ final class Version
      *
      * @return self|null
      */
-    public function parse(string $version_string): ?self
+    public static function parse(string $version_string): ?self
     {
-        preg_match('/(\d+)\.(\d+)\.(\d+)/', $version_string, $matches);
-        if (!isset($matches[1]) || !isset($matches[2]) || !isset($matches[3])) {
+        // 1文字目に v がついていれば削除
+        $version_string = preg_replace('/^v/', '', $version_string);
+        preg_match(self::SEMVER_REGEX, $version_string, $matches);
+        if (!isset($matches['major']) || !isset($matches['minor']) || !isset($matches['patch'])) {
             return null;
         }
-        return new self((int)$matches[1], (int)$matches[2], (int)$matches[3]);
+        return new self((int)$matches['major'], (int)$matches['minor'], (int)$matches['patch'], $matches['prerelease'] ?? "");
     }
 
     public function equals(Version $version_info): bool
     {
         return $this->getMajor() === $version_info->getMajor() &&
             $this->getMinor() === $version_info->getMinor() &&
-            $this->getPatch() === $version_info->getPatch();
+            $this->getPatch() === $version_info->getPatch() &&
+            $this->getPrerelease() === $version_info->getPrerelease();
     }
 
     public function getFullVersion()
     {
-        return sprintf('%d.%d.%d', $this->getMajor(), $this->getMinor(), $this->getPatch());
+        if ($this->getPrerelease() === "") {
+            return sprintf("%d.%d.%d", $this->getMajor(), $this->getMinor(), $this->getPatch());
+        }
+        return sprintf("%d.%d.%d-%s", $this->getMajor(), $this->getMinor(), $this->getPatch(), $this->getPrerelease());
     }
 
     public function getMajor()
@@ -73,5 +94,10 @@ final class Version
     public function getPatch()
     {
         return $this->patch;
+    }
+
+    public function getPrerelease()
+    {
+        return $this->prerelease;
     }
 }

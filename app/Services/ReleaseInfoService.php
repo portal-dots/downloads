@@ -37,12 +37,12 @@ class ReleaseInfoService
      *
      * @return Release[]
      */
-    public function getAllReleases(Int $major_version): array
+    public function getAllReleases(Int $major_version, Bool $includes_prerelease = false): array
     {
         return $this->cache->remember(
-            'getAllReleases/' . $major_version,
+            'getAllReleases/' . $major_version . ($includes_prerelease ? '-prelease' : ''),
             120,
-            function () use ($major_version) {
+            function () use ($major_version, $includes_prerelease) {
                 $result = [];
 
                 // APIから1ページ分取得
@@ -59,13 +59,17 @@ class ReleaseInfoService
                     }
 
                     foreach ($releases as $release) {
-                        $version_info = $this->version($release->tag_name);
+                        $version_info = Version::parse($release->tag_name);
 
                         if (empty($version_info)) {
                             continue;
                         }
 
-                        if ($version_info->getMajor() === $major_version && !$release->prerelease) {
+                        if ($version_info->getMajor() === $major_version) {
+                            if ($release->prerelease && !$includes_prerelease) {
+                                continue;
+                            }
+
                             $result[] = new Release(
                                 $version_info,
                                 new CarbonImmutable($release->published_at),
@@ -80,25 +84,15 @@ class ReleaseInfoService
 
                 // バージョン順にソートする
                 usort($result, function (Release $a, Release $b) {
-                    return version_compare($b->getVersion()->getFullVersion(), $a->getVersion()->getFullVersion());
+                    if (($compare_result = version_compare($b->getVersion()->getFullVersion(), $a->getVersion()->getFullVersion())) === 0) {
+                        // プレリリースバージョンで比較する
+                        return $b->getVersion()->getPrerelease() <=> $a->getVersion()->getPrerelease();
+                    }
+                    return $compare_result;
                 });
 
                 return $result;
             }
         );
-    }
-
-    /**
-     * バージョン文字列からバージョン情報配列を取得
-     *
-     * @return Version|null
-     */
-    public function version(string $version_string): ?Version
-    {
-        preg_match('/(\d+)\.(\d+)\.(\d+)/', $version_string, $matches);
-        if (!isset($matches[1]) || !isset($matches[2]) || !isset($matches[3])) {
-            return null;
-        }
-        return new Version((int)$matches[1], (int)$matches[2], (int)$matches[3]);
     }
 }
